@@ -15,7 +15,7 @@
       margin: 0;
       width: 100%;
       height: 100%;
-      font-family: Arial, "Noto Sans KR", sans-serif;
+      font-family: Arial, "Noto Sans KR", "Yu Gothic", sans-serif;
       background: #f4f4f4;
       color: #222;
       overflow: hidden;
@@ -26,24 +26,125 @@
       flex-direction: column;
     }
 
+    /* =========================
+       언어 선택 시작 화면
+    ========================= */
+    .language-start {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: linear-gradient(135deg, #222, #444);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .language-card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      padding: 36px 30px;
+      text-align: center;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+    }
+
+    .language-card h1 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .language-card p {
+      margin: 12px 0 28px;
+      color: #e0e0e0;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .language-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .language-btn {
+      border: none;
+      border-radius: 14px;
+      padding: 18px 12px;
+      background: white;
+      color: #222;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .language-btn span {
+      display: block;
+      margin-top: 5px;
+      font-size: 12px;
+      font-weight: normal;
+      color: #666;
+    }
+
+    .language-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .language-start.hidden {
+      display: none;
+    }
+
+    /* =========================
+       메인 화면
+    ========================= */
     header {
       height: 110px;
-      padding: 22px 20px;
-      text-align: center;
+      padding: 18px 24px;
       background: #222;
       color: white;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
     }
 
-    header h1 {
+    .header-text {
+      text-align: center;
+      flex: 1;
+    }
+
+    .header-text h1 {
       margin: 0;
       font-size: 28px;
     }
 
-    header p {
+    .header-text p {
       margin: 8px 0 0;
       font-size: 15px;
       color: #ddd;
+    }
+
+    .change-language-btn {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      background: transparent;
+      color: white;
+      padding: 9px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .change-language-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
     }
 
     .container {
@@ -51,7 +152,7 @@
       width: 100%;
       padding: 18px 24px;
       display: grid;
-      grid-template-columns: 1fr 260px;
+      grid-template-columns: 1fr 280px;
       gap: 20px;
       align-items: center;
       overflow: hidden;
@@ -62,30 +163,114 @@
       width: 100%;
       height: calc(100vh - 146px);
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14);
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .map-inner {
+    /*
+      원본 약도의 흰 배경을 줄이기 위해
+      이미지를 확대해서 보여줍니다.
+    */
+    .map-stage {
       position: relative;
+      width: min(100%, 760px);
       height: 100%;
-      aspect-ratio: 768 / 1024;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .map-canvas {
+      position: relative;
+      width: min(92%, 680px);
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
     }
 
     .map-image {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 132%;
+      height: auto;
+      max-width: none;
+      transform: translate(-50%, -50%);
       display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /*
+      부채꼴 시선 표시
+      카메라가 바라보는 방향을 은은하게 표현합니다.
+    */
+    .view-cone {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: rgba(255, 185, 60, 0.22);
+      clip-path: polygon(50% 50%, 100% 18%, 100% 82%);
+      transform-origin: 50% 50%;
+      pointer-events: none;
+      z-index: 3;
+      filter: blur(0.2px);
+    }
+
+    .view-cone::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at 50% 50%,
+        rgba(255, 210, 100, 0.36),
+        rgba(255, 185, 60, 0.18) 45%,
+        rgba(255, 185, 60, 0) 75%
+      );
+    }
+
+    .cone-left-top {
+      left: 24%;
+      top: 19%;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .cone-right-top {
+      left: 76%;
+      top: 19%;
+      transform: translate(-50%, -50%) rotate(135deg);
+    }
+
+    .cone-left-bottom {
+      left: 23%;
+      top: 82%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    .cone-right-bottom {
+      left: 78%;
+      top: 82%;
+      transform: translate(-50%, -50%) rotate(225deg);
+    }
+
+    .cone-center {
+      left: 50%;
+      top: 54%;
+      width: 125px;
+      height: 125px;
+      transform: translate(-50%, -50%) rotate(-90deg);
     }
 
     /*
       카메라 버튼
-      약도 위에 작은 원형 버튼으로 표시됩니다.
+      투명도를 높여 약도를 덜 가리도록 조정했습니다.
     */
     .hotspot {
       position: absolute;
@@ -93,31 +278,33 @@
       height: 38px;
       border: none;
       border-radius: 50%;
-      background: rgba(30, 30, 30, 0.82);
+      background: rgba(20, 20, 20, 0.48);
       color: white;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+      font-size: 17px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
       transition: 0.2s ease;
       padding: 0;
       transform: translate(-50%, -50%);
       z-index: 5;
+      backdrop-filter: blur(2px);
     }
 
     .hotspot:hover {
-      background: rgba(40, 100, 255, 0.92);
-      transform: translate(-50%, -50%) scale(1.1);
+      background: rgba(40, 100, 255, 0.72);
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
     }
 
     .hotspot::before {
       content: "";
       position: absolute;
-      inset: -5px;
+      inset: -4px;
       border-radius: 50%;
-      border: 2px solid rgba(40, 100, 255, 0.35);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
       opacity: 0;
       transition: 0.2s ease;
     }
@@ -127,32 +314,32 @@
     }
 
     /*
-      버튼 위치
-      left, top 값만 바꾸면 카메라 위치를 조정할 수 있습니다.
+      카메라 위치
+      필요하면 left, top 값만 수정하면 됩니다.
     */
     .left-top {
-      left: 28%;
-      top: 28%;
+      left: 24%;
+      top: 19%;
     }
 
     .right-top {
-      left: 72%;
-      top: 28%;
+      left: 76%;
+      top: 19%;
     }
 
     .left-bottom {
-      left: 28%;
-      top: 72%;
+      left: 23%;
+      top: 82%;
     }
 
     .right-bottom {
-      left: 72%;
-      top: 72%;
+      left: 78%;
+      top: 82%;
     }
 
     .center {
       left: 50%;
-      top: 50%;
+      top: 54%;
     }
 
     .side-info {
@@ -163,20 +350,19 @@
       gap: 14px;
     }
 
-    .map-info {
+    .map-info,
+    .guide {
       padding: 18px 20px;
       background: white;
       border-radius: 12px;
       box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-      color: #333;
-      font-size: 15px;
-      line-height: 1.6;
     }
 
     .map-info-title {
       margin: 0 0 12px;
       font-weight: bold;
       font-size: 17px;
+      color: #222;
     }
 
     .legend {
@@ -190,6 +376,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      font-size: 15px;
+      color: #333;
     }
 
     .line-solid {
@@ -204,18 +392,11 @@
       border-top: 3px dashed #222;
     }
 
-    .guide {
-      padding: 16px 18px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+    .guide p {
+      margin: 0;
       color: #555;
       font-size: 14px;
       line-height: 1.6;
-    }
-
-    .guide p {
-      margin: 0;
     }
 
     .modal {
@@ -285,7 +466,7 @@
       background: #111;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 980px) {
       html,
       body {
         overflow: auto;
@@ -298,17 +479,28 @@
 
       header {
         height: auto;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .header-text {
+        text-align: center;
+      }
+
+      .change-language-btn {
+        align-self: center;
       }
 
       .container {
         display: block;
-        padding: 18px;
+        padding: 16px;
         overflow: visible;
       }
 
       .map-wrap {
-        height: calc(100vh - 160px);
-        min-height: 520px;
+        height: calc(100vh - 180px);
+        min-height: 500px;
       }
 
       .side-info {
@@ -322,11 +514,15 @@
     }
 
     @media (max-width: 600px) {
-      header h1 {
+      header {
+        padding: 16px;
+      }
+
+      .header-text h1 {
         font-size: 22px;
       }
 
-      header p {
+      .header-text p {
         font-size: 13px;
       }
 
@@ -335,104 +531,173 @@
       }
 
       .map-wrap {
-        height: calc(100vh - 135px);
-        min-height: 430px;
+        height: calc(100vh - 175px);
+        min-height: 420px;
+      }
+
+      .map-canvas {
+        width: 96%;
       }
 
       .hotspot {
         width: 32px;
         height: 32px;
-        font-size: 15px;
+        font-size: 14px;
+      }
+
+      .view-cone {
+        width: 86px;
+        height: 86px;
+      }
+
+      .cone-center {
+        width: 96px;
+        height: 96px;
       }
 
       .modal-header h2 {
         font-size: 16px;
       }
 
-      .map-info {
+      .legend-item {
         font-size: 14px;
+      }
+
+      .guide p {
+        font-size: 13px;
+      }
+
+      .language-card {
+        padding: 28px 22px;
+      }
+
+      .language-card h1 {
+        font-size: 24px;
+      }
+
+      .language-buttons {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 
 <body>
+  <!-- 처음에 보이는 언어 선택 화면 -->
+  <section class="language-start" id="languageStart">
+    <div class="language-card">
+      <h1>언어 선택</h1>
+      <p>
+        안내를 볼 언어를 선택해주세요.<br />
+        表示する言語を選択してください。
+      </p>
+
+      <div class="language-buttons">
+        <button class="language-btn" onclick="startSite('ko')">
+          한국어
+          <span>Korean</span>
+        </button>
+
+        <button class="language-btn" onclick="startSite('ja')">
+          日本語
+          <span>Japanese</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
   <header>
-    <h1>실습실 약도</h1>
-    <p>약도의 카메라 버튼을 클릭하면 해당 위치 사진을 볼 수 있습니다.</p>
+    <div class="header-text">
+      <h1 id="pageTitle">실습실 약도</h1>
+      <p id="pageDesc">약도의 카메라 버튼을 클릭하면 해당 위치 사진을 볼 수 있습니다.</p>
+    </div>
+
+    <button class="change-language-btn" id="changeLanguageBtn" onclick="showLanguageStart()">
+      언어 변경
+    </button>
   </header>
 
   <main class="container">
     <div class="map-wrap">
-      <div class="map-inner">
-        <img src="약도.jpeg" alt="실습실 약도" class="map-image" />
+      <div class="map-stage">
+        <div class="map-canvas">
+          <img src="약도.jpeg" alt="실습실 약도" class="map-image" id="mapImage" />
 
-        <button
-          class="hotspot left-top"
-          onclick="openPhoto('좌상단', '좌상단.jpeg')"
-          aria-label="좌상단 사진 보기"
-          title="좌상단 사진 보기"
-        >
-          📷
-        </button>
+          <!-- 시선 방향 부채꼴 -->
+          <div class="view-cone cone-left-top"></div>
+          <div class="view-cone cone-right-top"></div>
+          <div class="view-cone cone-left-bottom"></div>
+          <div class="view-cone cone-right-bottom"></div>
+          <div class="view-cone cone-center"></div>
 
-        <button
-          class="hotspot right-top"
-          onclick="openPhoto('우상단', '우상단.jpeg')"
-          aria-label="우상단 사진 보기"
-          title="우상단 사진 보기"
-        >
-          📷
-        </button>
+          <!-- 카메라 버튼 -->
+          <button
+            class="hotspot left-top"
+            onclick="openPhoto('leftTop')"
+            aria-label="좌상단 사진 보기"
+            title="좌상단 사진 보기"
+          >
+            📷
+          </button>
 
-        <button
-          class="hotspot left-bottom"
-          onclick="openPhoto('좌하단', '좌하단.jpeg')"
-          aria-label="좌하단 사진 보기"
-          title="좌하단 사진 보기"
-        >
-          📷
-        </button>
+          <button
+            class="hotspot right-top"
+            onclick="openPhoto('rightTop')"
+            aria-label="우상단 사진 보기"
+            title="우상단 사진 보기"
+          >
+            📷
+          </button>
 
-        <button
-          class="hotspot right-bottom"
-          onclick="openPhoto('우하단', '우하단.jpeg')"
-          aria-label="우하단 사진 보기"
-          title="우하단 사진 보기"
-        >
-          📷
-        </button>
+          <button
+            class="hotspot left-bottom"
+            onclick="openPhoto('leftBottom')"
+            aria-label="좌하단 사진 보기"
+            title="좌하단 사진 보기"
+          >
+            📷
+          </button>
 
-        <button
-          class="hotspot center"
-          onclick="openPhoto('가운데', '가운데.jpeg')"
-          aria-label="가운데 사진 보기"
-          title="가운데 사진 보기"
-        >
-          📷
-        </button>
+          <button
+            class="hotspot right-bottom"
+            onclick="openPhoto('rightBottom')"
+            aria-label="우하단 사진 보기"
+            title="우하단 사진 보기"
+          >
+            📷
+          </button>
+
+          <button
+            class="hotspot center"
+            onclick="openPhoto('center')"
+            aria-label="가운데 사진 보기"
+            title="가운데 사진 보기"
+          >
+            📷
+          </button>
+        </div>
       </div>
     </div>
 
     <aside class="side-info">
       <section class="map-info">
-        <p class="map-info-title">약도 안내</p>
+        <p class="map-info-title" id="legendTitle">약도 안내</p>
 
         <div class="legend">
           <div class="legend-item">
             <span class="line-solid"></span>
-            <span>실선: 벽</span>
+            <span id="wallText">실선: 벽</span>
           </div>
 
           <div class="legend-item">
             <span class="line-dashed"></span>
-            <span>점선: 미닫이문</span>
+            <span id="doorText">점선: 미닫이문</span>
           </div>
         </div>
       </section>
 
       <section class="guide">
-        <p>
+        <p id="guideText">
           약도 위의 카메라 버튼을 클릭하면 해당 위치의 사진이 표시됩니다.
         </p>
       </section>
@@ -456,17 +721,117 @@
     const modal = document.getElementById("photoModal");
     const modalTitle = document.getElementById("modalTitle");
     const modalImage = document.getElementById("modalImage");
+    const languageStart = document.getElementById("languageStart");
 
-    function openPhoto(title, imageSrc) {
-      modalTitle.textContent = title;
-      modalImage.src = imageSrc;
-      modalImage.alt = title + " 사진";
+    let currentLang = "ko";
+
+    const spots = {
+      leftTop: {
+        file: "좌상단.jpeg",
+        ko: "좌상단",
+        ja: "左上"
+      },
+      rightTop: {
+        file: "우상단.jpeg",
+        ko: "우상단",
+        ja: "右上"
+      },
+      leftBottom: {
+        file: "좌하단.jpeg",
+        ko: "좌하단",
+        ja: "左下"
+      },
+      rightBottom: {
+        file: "우하단.jpeg",
+        ko: "우하단",
+        ja: "右下"
+      },
+      center: {
+        file: "가운데.jpeg",
+        ko: "가운데",
+        ja: "中央"
+      }
+    };
+
+    const texts = {
+      ko: {
+        title: "실습실 약도",
+        desc: "약도의 카메라 버튼을 클릭하면 해당 위치 사진을 볼 수 있습니다.",
+        legendTitle: "약도 안내",
+        wall: "실선: 벽",
+        door: "점선: 미닫이문",
+        guide: "약도 위의 카메라 버튼을 클릭하면 해당 위치의 사진이 표시됩니다.",
+        modalDefault: "위치 사진",
+        close: "닫기",
+        photoView: "사진 보기",
+        changeLanguage: "언어 변경"
+      },
+      ja: {
+        title: "実習室案内図",
+        desc: "案内図のカメラボタンをクリックすると、その位置の写真を見ることができます。",
+        legendTitle: "案内図の説明",
+        wall: "実線: 壁",
+        door: "点線: 引き戸",
+        guide: "案内図のカメラボタンをクリックすると、その位置の写真が表示されます。",
+        modalDefault: "位置写真",
+        close: "閉じる",
+        photoView: "写真を見る",
+        changeLanguage: "言語変更"
+      }
+    };
+
+    function startSite(lang) {
+      currentLang = lang;
+      applyLanguage(lang);
+      languageStart.classList.add("hidden");
+    }
+
+    function showLanguageStart() {
+      languageStart.classList.remove("hidden");
+    }
+
+    function applyLanguage(lang) {
+      document.documentElement.lang = lang;
+
+      document.getElementById("pageTitle").textContent = texts[lang].title;
+      document.getElementById("pageDesc").textContent = texts[lang].desc;
+      document.getElementById("legendTitle").textContent = texts[lang].legendTitle;
+      document.getElementById("wallText").textContent = texts[lang].wall;
+      document.getElementById("doorText").textContent = texts[lang].door;
+      document.getElementById("guideText").textContent = texts[lang].guide;
+      document.getElementById("changeLanguageBtn").textContent = texts[lang].changeLanguage;
+
+      document.title = texts[lang].title;
+
+      const buttons = document.querySelectorAll(".hotspot");
+      const keys = ["leftTop", "rightTop", "leftBottom", "rightBottom", "center"];
+
+      buttons.forEach((button, index) => {
+        const key = keys[index];
+        const label = spots[key][lang];
+
+        button.setAttribute("title", `${label} ${texts[lang].photoView}`);
+        button.setAttribute("aria-label", `${label} ${texts[lang].photoView}`);
+      });
+
+      if (!modal.classList.contains("active")) {
+        modalTitle.textContent = texts[lang].modalDefault;
+      }
+    }
+
+    function openPhoto(key) {
+      const spot = spots[key];
+
+      modalTitle.textContent = spot[currentLang];
+      modalImage.src = spot.file;
+      modalImage.alt = `${spot[currentLang]} 사진`;
       modal.classList.add("active");
     }
 
     function closePhoto() {
       modal.classList.remove("active");
       modalImage.src = "";
+      modalTitle.textContent = texts[currentLang].modalDefault;
     }
 
     function closeModalByBackground(event) {
@@ -480,6 +845,8 @@
         closePhoto();
       }
     });
+
+    applyLanguage("ko");
   </script>
 </body>
 </html>
