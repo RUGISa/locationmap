@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>약도 사진 보기</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      background: #f4f4f4;
+      color: #222;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      height: 110px;
+      padding: 22px 20px;
+      text-align: center;
+      background: #222;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      font-size: 15px;
+      color: #ddd;
+    }
+
+    .container {
+      flex: 1;
+      width: 100%;
+      padding: 18px 24px;
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 20px;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .map-wrap {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 146px);
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .map-inner {
+      position: relative;
+      height: 100%;
+      aspect-ratio: 768 / 1024;
+    }
+
+    .map-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /*
+      카메라 버튼
+      약도 위에 작은 원형 버튼으로 표시됩니다.
+    */
+    .hotspot {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(30, 30, 30, 0.82);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+      transition: 0.2s ease;
+      padding: 0;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+    }
+
+    .hotspot:hover {
+      background: rgba(40, 100, 255, 0.92);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .hotspot::before {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 2px solid rgba(40, 100, 255, 0.35);
+      opacity: 0;
+      transition: 0.2s ease;
+    }
+
+    .hotspot:hover::before {
+      opacity: 1;
+    }
+
+    /*
+      버튼 위치
+      left, top 값만 바꾸면 카메라 위치를 조정할 수 있습니다.
+    */
+    .left-top {
+      left: 28%;
+      top: 28%;
+    }
+
+    .right-top {
+      left: 72%;
+      top: 28%;
+    }
+
+    .left-bottom {
+      left: 28%;
+      top: 72%;
+    }
+
+    .right-bottom {
+      left: 72%;
+      top: 72%;
+    }
+
+    .center {
+      left: 50%;
+      top: 50%;
+    }
+
+    .side-info {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .map-info {
+      padding: 18px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+      color: #333;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .map-info-title {
+      margin: 0 0 12px;
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .line-solid {
+      display: inline-block;
+      width: 44px;
+      border-top: 3px solid #222;
+    }
+
+    .line-dashed {
+      display: inline-block;
+      width: 44px;
+      border-top: 3px dashed #222;
+    }
+
+    .guide {
+      padding: 16px 18px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+      color: #555;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .guide p {
+      margin: 0;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      position: relative;
+      width: 100%;
+      max-width: 1000px;
+      max-height: 92vh;
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      background: #222;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .close-btn {
+      border: none;
+      background: transparent;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-body {
+      background: #111;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .modal-body img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-height: calc(92vh - 58px);
+      object-fit: contain;
+      background: #111;
+    }
+
+    @media (max-width: 900px) {
+      html,
+      body {
+        overflow: auto;
+      }
+
+      body {
+        height: auto;
+        min-height: 100%;
+      }
+
+      header {
+        height: auto;
+      }
+
+      .container {
+        display: block;
+        padding: 18px;
+        overflow: visible;
+      }
+
+      .map-wrap {
+        height: calc(100vh - 160px);
+        min-height: 520px;
+      }
+
+      .side-info {
+        margin-top: 16px;
+      }
+
+      .legend {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 22px;
+      }
+
+      header p {
+        font-size: 13px;
+      }
+
+      .container {
+        padding: 12px;
+      }
+
+      .map-wrap {
+        height: calc(100vh - 135px);
+        min-height: 430px;
+      }
+
+      .hotspot {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+      }
+
+      .modal-header h2 {
+        font-size: 16px;
+      }
+
+      .map-info {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>실습실 약도</h1>
+    <p>약도의 카메라 버튼을 클릭하면 해당 위치 사진을 볼 수 있습니다.</p>
+  </header>
+
+  <main class="container">
+    <div class="map-wrap">
+      <div class="map-inner">
+        <img src="약도.jpeg" alt="실습실 약도" class="map-image" />
+
+        <button
+          class="hotspot left-top"
+          onclick="openPhoto('좌상단', '좌상단.jpeg')"
+          aria-label="좌상단 사진 보기"
+          title="좌상단 사진 보기"
+        >
+          📷
+        </button>
+
+        <button
+          class="hotspot right-top"
+          onclick="openPhoto('우상단', '우상단.jpeg')"
+          aria-label="우상단 사진 보기"
+          title="우상단 사진 보기"
+        >
+          📷
+        </button>
+
+        <button
+          class="hotspot left-bottom"
+          onclick="openPhoto('좌하단', '좌하단.jpeg')"
+          aria-label="좌하단 사진 보기"
+          title="좌하단 사진 보기"
+        >
+          📷
+        </button>
+
+        <button
+          class="hotspot right-bottom"
+          onclick="openPhoto('우하단', '우하단.jpeg')"
+          aria-label="우하단 사진 보기"
+          title="우하단 사진 보기"
+        >
+          📷
+        </button>
+
+        <button
+          class="hotspot center"
+          onclick="openPhoto('가운데', '가운데.jpeg')"
+          aria-label="가운데 사진 보기"
+          title="가운데 사진 보기"
+        >
+          📷
+        </button>
+      </div>
+    </div>
+
+    <aside class="side-info">
+      <section class="map-info">
+        <p class="map-info-title">약도 안내</p>
+
+        <div class="legend">
+          <div class="legend-item">
+            <span class="line-solid"></span>
+            <span>실선: 벽</span>
+          </div>
+
+          <div class="legend-item">
+            <span class="line-dashed"></span>
+            <span>점선: 미닫이문</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="guide">
+        <p>
+          약도 위의 카메라 버튼을 클릭하면 해당 위치의 사진이 표시됩니다.
+        </p>
+      </section>
+    </aside>
+  </main>
+
+  <div class="modal" id="photoModal" onclick="closeModalByBackground(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">위치 사진</h2>
+        <button class="close-btn" onclick="closePhoto()" aria-label="닫기">×</button>
+      </div>
+
+      <div class="modal-body">
+        <img id="modalImage" src="" alt="위치 사진" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById("photoModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalImage = document.getElementById("modalImage");
+
+    function openPhoto(title, imageSrc) {
+      modalTitle.textContent = title;
+      modalImage.src = imageSrc;
+      modalImage.alt = title + " 사진";
+      modal.classList.add("active");
+    }
+
+    function closePhoto() {
+      modal.classList.remove("active");
+      modalImage.src = "";
+    }
+
+    function closeModalByBackground(event) {
+      if (event.target === modal) {
+        closePhoto();
+      }
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closePhoto();
+      }
+    });
+  </script>
+</body>
+</html>
